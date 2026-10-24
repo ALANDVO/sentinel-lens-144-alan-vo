@@ -1,0 +1,222 @@
+{
+  "realm": "sentinel-lens",
+  "enabled": true,
+  "displayName": "Sentinel Lens",
+  "displayNameHtml": "<div class=\"kc-logo-text\"><span>Sentinel Lens</span></div>",
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": false,
+  "rememberMe": true,
+  "verifyEmail": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 30,
+  "defaultRoles": ["viewer"],
+  "requiredCredentials": ["password"],
+  "otpPolicyType": "totp",
+  "otpPolicyAlgorithm": "HmacSHA1",
+  "otpPolicyInitialCounter": 0,
+  "otpPolicyDigits": 6,
+  "otpPolicyLookAheadWindow": 1,
+  "otpPolicyPeriod": 30,
+  "otpSupportedApplications": [
+    "FreeOTP",
+    "Google Authenticator",
+    "Microsoft Authenticator"
+  ],
+  "webAuthnPolicyRpEntityName": "Sentinel Lens",
+  "webAuthnPolicySignatureAlgorithms": ["ES256", "RS256"],
+  "webAuthnPolicyRpId": "localhost",
+  "webAuthnPolicyAttestationConveyancePreference": "none",
+  "webAuthnPolicyAuthenticatorAttachment": "platform",
+  "webAuthnPolicyRequireResidentKey": "not-required",
+  "webAuthnPolicyUserVerificationRequirement": "preferred",
+  "webAuthnPolicyCreateTimeout": 0,
+  "webAuthnPolicyAvoidSameAuthenticatorRegister": false,
+  "webAuthnPolicyAcceptableAaguids": [],
+  "webAuthnPolicyPasswordless": false,
+  "accessTokenLifespan": 300,
+  "accessTokenLifespanForImplicitFlow": 900,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "offlineSessionIdleTimeout": 2592000,
+  "offlineSessionMaxLifespan": 5184000,
+  "accessCodeLifespan": 60,
+  "accessCodeLifespanLogin": 1800,
+  "accessCodeLifespanUserAction": 300,
+  "actionTokenGeneratedByAdminLifespan": 43200,
+  "actionTokenGeneratedByUserLifespan": 300,
+  "oauth2DeviceCodeLifespan": 600,
+  "oauth2DevicePollingInterval": 5,
+  "clients": [
+    {
+      "clientId": "sentinel-lens-backend",
+      "name": "Sentinel Lens Backend",
+      "description": "Backend API client",
+      "rootUrl": "http://localhost:8000",
+      "baseUrl": "/",
+      "surrogateAuthRequired": false,
+      "enabled": true,
+      "alwaysDisplayInConsole": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "backend-secret-change-in-production",
+      "redirectUris": ["http://localhost:8000/*"],
+      "webOrigins": ["http://localhost:8000"],
+      "notBefore": 0,
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "publicClient": false,
+      "frontchannelLogout": false,
+      "protocol": "openid-connect",
+      "attributes": {
+        "access.token.lifespan": "300",
+        "client.secret.creation.time": "0"
+      },
+      "authenticationFlowBindingOverrides": {},
+      "fullScopeAllowed": true,
+      "nodeReRegistrationTimeout": -1,
+      "defaultClientScopes": ["web-origins", "roles", "profile", "email"],
+      "optionalClientScopes": ["address", "phone", "offline_access", "microprofile-jwt"]
+    },
+    {
+      "clientId": "sentinel-lens-frontend",
+      "name": "Sentinel Lens Frontend",
+      "description": "Frontend SPA client",
+      "rootUrl": "http://localhost:3000",
+      "baseUrl": "/",
+      "surrogateAuthRequired": false,
+      "enabled": true,
+      "alwaysDisplayInConsole": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "",
+      "redirectUris": ["http://localhost:3000/*"],
+      "webOrigins": ["http://localhost:3000"],
+      "notBefore": 0,
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "publicClient": true,
+      "frontchannelLogout": true,
+      "protocol": "openid-connect",
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:3000/*",
+        "access.token.lifespan": "300"
+      },
+      "authenticationFlowBindingOverrides": {},
+      "fullScopeAllowed": true,
+      "nodeReRegistrationTimeout": -1,
+      "defaultClientScopes": ["web-origins", "roles", "profile", "email"],
+      "optionalClientScopes": ["address", "phone", "offline_access", "microprofile-jwt"]
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "viewer",
+        "description": "Read-only access to audit results",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "sentinel-lens"
+      },
+      {
+        "name": "operator",
+        "description": "Can create and manage audit runs",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "sentinel-lens"
+      },
+      {
+        "name": "admin",
+        "description": "Full administrative access",
+        "composite": true,
+        "composites": {
+          "realm": ["viewer", "operator"]
+        },
+        "clientRole": false,
+        "containerId": "sentinel-lens"
+      }
+    ],
+    "client": {}
+  },
+  "groups": [],
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Admin",
+      "lastName": "User",
+      "email": "admin@example.com",
+      "disableable": false,
+      "requiredActions": [],
+      "notBefore": 0,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["admin"],
+      "clientRoles": {}
+    },
+    {
+      "username": "operator",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Operator",
+      "lastName": "User",
+      "email": "operator@example.com",
+      "disableable": false,
+      "requiredActions": [],
+      "notBefore": 0,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "operator",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["operator"],
+      "clientRoles": {}
+    },
+    {
+      "username": "viewer",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Viewer",
+      "lastName": "User",
+      "email": "viewer@example.com",
+      "disableable": false,
+      "requiredActions": [],
+      "notBefore": 0,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "viewer",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["viewer"],
+      "clientRoles": {}
+    }
+  ]
+}

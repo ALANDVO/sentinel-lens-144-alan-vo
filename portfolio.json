@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "name": "sentinel-lens-144-alan-vo",
+  "owner": "ALANDVO",
+  "email": "alanvo@gmail.com",
+  "domain": "AI/ML developer tools",
+  "summary": "Work in progress: sentinel-lens-144-alan-vo",
+  "workflows": [
+    "Create new audit run with target repository and configure audit profile",
+    "Import and review prior audit findings with coverage ledger comparison",
+    "Search, filter, and export findings with machine-readable output"
+  ],
+  "auth": "oidc-keycloak-saml-broker",
+  "llm_providers": [
+    "openai-compatible",
+    "anthropic",
+    "gemini",
+    "ollama"
+  ],
+  "status": "work-in-progress"
+}
