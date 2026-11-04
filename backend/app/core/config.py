@@ -1,9 +1,14 @@
 """Application configuration using Pydantic Settings"""
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Optional
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+DEFAULT_DB_PATH = PROJECT_ROOT / "backend" / "data" / "app.db"
 
 
 class Settings(BaseSettings):
@@ -20,7 +25,7 @@ class Settings(BaseSettings):
     app_env: str = Field(default="development", alias="APP_ENV")
     debug: bool = Field(default=True, alias="DEBUG")
     secret_key: str = Field(default="change-me-in-production", alias="SECRET_KEY")
-    database_url: str = Field(default="sqlite:///./data/app.db", alias="DATABASE_URL")
+    database_url: str = Field(default=f"sqlite:///{DEFAULT_DB_PATH}", alias="DATABASE_URL")
 
     # LLM (optional)
     llm_api_key: Optional[str] = Field(default=None, alias="LLM_API_KEY")

@@ -65,8 +65,6 @@ class Finding(Base):
 
     __table_args__ = (
         Index("ix_findings_audit_run_status", "audit_run_id", "status"),
-        Index("ix_findings_attack_class", "attack_class"),
-        Index("ix_findings_severity", "severity"),
     )
 
     def __repr__(self) -> str:

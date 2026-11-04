@@ -58,6 +58,10 @@ class AuditEngine:
         AttackClass.AUTH_BROKEN: ["login", "authenticate", "session", "jwt", "oauth"],
         AttackClass.AUTHZ_BROKEN: ["permission", "authorize", "role", "access_control"],
         AttackClass.BUSINESS_LOGIC: ["validate", "check", "verify", "assert"],
+        AttackClass.XXE: ["xml", "xmllib", "defusedxml", "DOCTYPE", "ENTITY"],
+        AttackClass.SECURITY_MISCONFIG: ["debug", "expose", "cors", "headers", "default"],
+        AttackClass.VULNERABLE_DEPS: ["requirements", "package.json", "pom.xml", "build.gradle", "Cargo.toml"],
+        AttackClass.INSUFFICIENT_LOGGING: ["log", "logger", "audit", "trace", "monitor"],
     }
 
     def __init__(self, db: AsyncSession, audit_run: AuditRun):
@@ -140,6 +144,7 @@ class AuditEngine:
                 "title": f"Potential {unit.attack_class.replace('_', ' ').title()} in {unit.unit_id}",
                 "description": f"Code pattern matching {unit.attack_class} detected in {unit.file_path}:{unit.line_start}-{unit.line_end}",
                 "severity": FindingSeverity.MEDIUM.value,
+                "attack_class": unit.attack_class,
                 "evidence": {"patterns_matched": patterns[:3], "unit_id": unit.unit_id},
                 "remediation": {"strategy": "review_and_harden", "details": f"Review {unit.file_path} for {unit.attack_class} vulnerabilities"},
             })
