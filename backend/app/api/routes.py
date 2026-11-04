@@ -6,7 +6,7 @@ from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
 from typing import List, Optional
 from datetime import datetime, timezone
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from app.db import get_db
 from app.models.audit import AuditRun, AuditStatus, AuditProfile
 from app.models.finding import Finding, FindingStatus, FindingSeverity
@@ -23,6 +23,10 @@ class AuditRunCreate(BaseModel):
     config: dict = Field(default_factory=dict)
 
 
+class ImportPriorRunRequest(BaseModel):
+    prior_run_id: int
+
+
 class AuditRunResponse(BaseModel):
     id: int
     target_repo: str
@@ -37,8 +41,7 @@ class AuditRunResponse(BaseModel):
     findings_count: int = 0
     coverage_units_count: int = 0
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class FindingResponse(BaseModel):
@@ -59,8 +62,7 @@ class FindingResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CoverageUnitResponse(BaseModel):
@@ -77,12 +79,11 @@ class CoverageUnitResponse(BaseModel):
     hunter_result: dict
     verifier_result: dict
     prior_run_id: Optional[int]
-    metadata: dict
+    unit_metadata: dict
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class HealthResponse(BaseModel):
@@ -205,9 +206,10 @@ async def get_coverage(
 @router.post("/audits/{audit_id}/import")
 async def import_prior_run(
     audit_id: int,
-    prior_run_id: int,
+    request: ImportPriorRunRequest,
     db: AsyncSession = Depends(get_db),
 ):
+    prior_run_id = request.prior_run_id
     # Verify both runs exist
     audit_run = await db.get(AuditRun, audit_id)
     if not audit_run:
@@ -215,7 +217,6 @@ async def import_prior_run(
     prior_run = await db.get(AuditRun, prior_run_id)
     if not prior_run:
         raise HTTPException(status_code=404, detail="Prior audit run not found")
-    
     # Import confirmed findings as prior_covered_same_source coverage units
     prior_findings = await db.execute(
         select(Finding).where(Finding.audit_run_id == prior_run_id, Finding.status == FindingStatus.CONFIRMED)
@@ -232,10 +233,8 @@ async def import_prior_run(
             attack_class=finding.attack_class,
             status=CoverageStatus.PRIOR_COVERED_SAME_SOURCE,
             prior_run_id=prior_run_id,
-            metadata={"source_finding_id": finding.id, "source_severity": finding.severity.value},
+            unit_metadata={"source_finding_id": finding.id, "source_severity": finding.severity.value},
         )
-        db.add(coverage)
-        imported += 1
     
     await db.commit()
     return {"imported": imported, "prior_run_id": prior_run_id}
@@ -297,7 +296,7 @@ async def export_audit(
                 "hunter_result": c.hunter_result,
                 "verifier_result": c.verifier_result,
                 "prior_run_id": c.prior_run_id,
-                "metadata": c.metadata,
+                "unit_metadata": c.unit_metadata,
                 "created_at": c.created_at.isoformat(),
             }
             for c in coverage.scalars()

@@ -39,7 +39,7 @@ class CoverageUnit(Base):
     hunter_result: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     verifier_result: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     prior_run_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    metadata: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    unit_metadata: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -57,8 +57,6 @@ class CoverageUnit(Base):
 
     __table_args__ = (
         Index("ix_coverage_units_audit_run_status", "audit_run_id", "status"),
-        Index("ix_coverage_units_unit_id", "unit_id"),
-        Index("ix_coverage_units_attack_class", "attack_class"),
     )
 
     def __repr__(self) -> str:

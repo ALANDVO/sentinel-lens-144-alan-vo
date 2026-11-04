@@ -8,7 +8,6 @@ from app.models.audit import AuditRun, AuditStatus, AuditProfile
 from app.models.finding import Finding, FindingStatus, FindingSeverity
 from app.models.coverage import CoverageUnit, CoverageStatus
 
-
 @pytest.fixture(scope="session")
 def app():
     return create_app()
@@ -27,12 +26,11 @@ async def db_session():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
 
-
 @pytest.fixture
-async def client(app):
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+async def client(app, db_session):
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
-
 
 @pytest.mark.asyncio
 async def test_health_check(client):
