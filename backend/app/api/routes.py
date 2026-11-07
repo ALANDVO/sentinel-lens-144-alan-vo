@@ -1,16 +1,23 @@
 """API routes"""
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
 from typing import List, Optional
 from datetime import datetime, timezone
 from pydantic import BaseModel, Field, ConfigDict
+from urllib.parse import urlencode
+import httpx
+
 from app.db import get_db
+from app.core.config import get_settings
 from app.models.audit import AuditRun, AuditStatus, AuditProfile
 from app.models.finding import Finding, FindingStatus, FindingSeverity
 from app.models.coverage import CoverageUnit, CoverageStatus
+from app.models.user import User, UserRole
+from app.services.auth import AuthService
 
 router = APIRouter()
 
@@ -91,9 +98,133 @@ class HealthResponse(BaseModel):
     version: str
 
 
+# Auth schemas
+class UserResponse(BaseModel):
+    id: int
+    keycloak_id: str
+    username: str
+    email: str
+    full_name: Optional[str]
+    role: UserRole
+    is_active: bool
+    last_login: Optional[datetime]
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int
+
+
+class LoginResponse(BaseModel):
+    login_url: str
+
+
+# Auth dependencies
+security = HTTPBearer(auto_error=False)
+settings = get_settings()
+
+
+async def get_auth_service(db: AsyncSession = Depends(get_db)) -> AuthService:
+    return AuthService(db)
+
+
+async def get_current_user(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    auth_service: AuthService = Depends(get_auth_service),
+) -> User:
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    try:
+        claims = await auth_service.validate_token(credentials.credentials)
+        user = await auth_service.get_or_create_user(claims)
+        
+        if not user.is_active:
+            raise HTTPException(status_code=403, detail="User inactive")
+        
+        return user
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+
+
+def require_roles(*required_roles: UserRole):
+    async def _check_role(user: User = Depends(get_current_user)) -> User:
+        if user.role not in required_roles:
+            raise HTTPException(status_code=403, detail=f"Requires one of: {[r.value for r in required_roles]}")
+        return user
+    return _check_role
+
 @router.get("/health", response_model=HealthResponse)
 async def health_check():
     return HealthResponse(status="healthy", version="1.0.0")
+
+
+# Auth routes
+@router.get("/auth/login", response_model=LoginResponse)
+async def login(request: Request):
+    """Initiate OIDC login - redirects to Keycloak"""
+    redirect_uri = str(request.url_for("auth_callback"))
+    params = {
+        "client_id": settings.keycloak_client_id,
+        "redirect_uri": redirect_uri,
+        "response_type": "code",
+        "scope": "openid profile email",
+        "state": "sentinel-lens-auth",
+    }
+    login_url = f"{settings.keycloak_url}/realms/{settings.keycloak_realm}/protocol/openid-connect/auth?{urlencode(params)}"
+    return LoginResponse(login_url=login_url)
+
+
+@router.get("/auth/callback")
+async def auth_callback(code: str, request: Request, db: AsyncSession = Depends(get_db)):
+    """OIDC callback - exchange code for tokens"""
+    redirect_uri = str(request.url_for("auth_callback"))
+    auth_service = AuthService(db)
+    
+    async with httpx.AsyncClient() as client:
+        token_response = await client.post(
+            f"{settings.keycloak_url}/realms/{settings.keycloak_realm}/protocol/openid-connect/token",
+            data={
+                "grant_type": "authorization_code",
+                "code": code,
+                "redirect_uri": redirect_uri,
+                "client_id": settings.keycloak_client_id,
+                "client_secret": settings.keycloak_client_secret,
+            },
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+        token_response.raise_for_status()
+        tokens = token_response.json()
+    
+    # Validate the access token and get/create user
+    claims = await auth_service.validate_token(tokens["access_token"])
+    user = await auth_service.get_or_create_user(claims)
+    
+    # Return tokens (in production, consider secure cookie storage)
+    return {
+        "access_token": tokens["access_token"],
+        "refresh_token": tokens.get("refresh_token"),
+        "token_type": tokens.get("token_type", "bearer"),
+        "expires_in": tokens.get("expires_in", 300),
+        "user": UserResponse.model_validate(user),
+    }
+
+
+@router.post("/auth/logout")
+async def logout():
+    """Logout - client should discard tokens"""
+    return {"message": "Logged out successfully"}
+
+
+@router.get("/auth/me", response_model=UserResponse)
+async def get_current_user_info(user: User = Depends(get_current_user)):
+    """Get current authenticated user info"""
+    return UserResponse.model_validate(user)
 
 
 # Audit Runs
