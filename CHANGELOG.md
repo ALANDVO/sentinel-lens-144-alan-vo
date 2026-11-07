@@ -26,3 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic health check endpoints
 - SQLite persistence with SQLAlchemy models
 - OIDC authentication skeleton with PKCE support
+
+---
+
+Alan Vo · [alanvo.net](https://alanvo.net)

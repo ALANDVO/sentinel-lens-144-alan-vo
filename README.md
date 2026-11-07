@@ -174,3 +174,7 @@ PYTHONPATH=. .venv/bin/python -m pytest tests/test_audit_engine.py -v
 ## License
 
 MIT License - Copyright (c) 2026 Alan Vo <alanvo@gmail.com>
+
+---
+
+Alan Vo · [alanvo.net](https://alanvo.net)

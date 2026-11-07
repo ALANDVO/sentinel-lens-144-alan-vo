@@ -64,3 +64,6 @@ Acceptance:
 - API docs in docs/
 - All portfolio.json fields populated correctly
 
+---
+
+Alan Vo · [alanvo.net](https://alanvo.net)
