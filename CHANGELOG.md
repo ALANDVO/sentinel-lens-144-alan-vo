@@ -1,8 +1,18 @@
 # Changelog
 
-## 1.2.0 — work-in-progress checkpoint
+## 1.3.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
+
+## 1.2.0 — work-in-progress checkpoint
+
+### Fixed
+- Backend test database configuration to use in-memory SQLite for testing
+- All 20 backend tests now pass (9 audit engine tests + 11 API route tests)
+
+### Known Issues
+- Frontend tests not yet verified
+- CI workflow not yet run
 
 ## 1.1.0 — work-in-progress checkpoint
 
