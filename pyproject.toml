@@ -1,6 +1,6 @@
 [project]
 name = "sentinel-lens-144-alan-vo"
-version = "1.0.0"
+version = "1.4.0"
 description = "A coding-agent skill for multi-phase security audits with independently verified, machine-readable findings"
 readme = "README.md"
 license = {text = "MIT"}

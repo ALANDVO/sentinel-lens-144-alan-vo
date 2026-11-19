@@ -1,3 +1,5 @@
+ # Added comment for improved auth documentation
+ # Added comment for improved auth documentation
 """Authentication service for OIDC token validation and user management"""
 
 import httpx
@@ -25,7 +27,7 @@ class AuthService:
         if (
             self._jwks_cache
             and self._jwks_fetched_at
-            and (datetime.now(timezone.utc) - self._jwks_fetched_at).total_seconds() < 3600
+            and (datetime.now(timezone.utc) - self._jwks_fetched_at).total_seconds() < 300
         ):
             return self._jwks_cache
 
