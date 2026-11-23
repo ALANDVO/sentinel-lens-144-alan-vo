@@ -216,9 +216,20 @@ async def auth_callback(code: str, request: Request, db: AsyncSession = Depends(
 
 
 @router.post("/auth/logout")
-async def logout():
-    """Logout - client should discard tokens"""
-    return {"message": "Logged out successfully"}
+async def logout(request: Request):
+    """Logout - redirect to Keycloak end session endpoint"""
+    # Construct Keycloak logout URL so the client can redirect there
+    # if keycloak_client_secret is set, use it; otherwise public client flow
+    client_secret = settings.keycloak_client_secret or ""
+    logout_url = f"{settings.keycloak_issuer_url}/protocol/openid-connect/logout"
+    params = {
+        "client_id": settings.keycloak_client_id,
+        "post_logout_redirect_uri": str(request.url_for("health_check")),
+    }
+    if client_secret:
+        params["client_secret"] = client_secret
+    logout_url = f"{logout_url}?{urlencode(params)}"
+    return {"logout_url": logout_url}
 
 
 @router.get("/auth/me", response_model=UserResponse)
